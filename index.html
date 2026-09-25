@@ -2,151 +2,455 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f1115">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Upscaler">
 <link rel="manifest" href="./manifest.webmanifest">
 <title>Image Upscaler</title>
 <style>
-:root{--bg:#0f1115;--card:#181c23;--line:#2a3039;--text:#f7f8fb;--muted:#9da5b3;--accent:#87a9ff;--ok:#78d68a;--bad:#ff7b89}
+:root{
+  color-scheme:light dark;
+  --bg:#f2f2f7;--card:#ffffff;--card2:#f8f8fa;--text:#111111;--sub:#6e6e73;
+  --line:rgba(60,60,67,.16);--blue:#007aff;--green:#34c759;--red:#ff3b30;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 10px 28px rgba(0,0,0,.05);
+  --glass:rgba(242,242,247,.84)
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#000;--card:#1c1c1e;--card2:#2c2c2e;--text:#fff;--sub:#98989d;--line:rgba(84,84,88,.65);--shadow:none;--glass:rgba(0,0,0,.78)}
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif}
-.app{max-width:720px;margin:auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom))}
-h1{font-size:24px;margin:4px 0}.sub{color:var(--muted);font-size:13px;margin:0 0 14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
-.pick{display:block;padding:30px 16px;text-align:center;border:1px dashed #465061;border-radius:15px;background:#1d222b}
-.pick b{display:block;font-size:18px;margin-bottom:5px}.pick span{font-size:13px;color:var(--muted)}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",sans-serif}
+body{overscroll-behavior-y:none}
+button,input,select{font:inherit}
+button{touch-action:manipulation}
+.app{max-width:680px;margin:0 auto;padding:calc(70px + env(safe-area-inset-top)) 16px calc(112px + env(safe-area-inset-bottom))}
+.topbar{
+  position:fixed;z-index:20;top:0;left:0;right:0;height:calc(58px + env(safe-area-inset-top));
+  padding-top:env(safe-area-inset-top);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  background:var(--glass);border-bottom:.5px solid var(--line)
+}
+.topbar-inner{height:58px;max-width:680px;margin:auto;padding:0 16px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:17px;font-weight:700;letter-spacing:-.2px}
+.iconbtn{border:0;background:none;color:var(--blue);font-size:15px;padding:10px 0;font-weight:600}
+.hero{padding:8px 4px 16px}
+.hero h1{font-size:34px;line-height:1.05;letter-spacing:-1.1px;margin:0 0 8px;font-weight:780}
+.hero p{margin:0;color:var(--sub);font-size:15px;line-height:1.45}
+.badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:.5px solid var(--line);padding:7px 10px;border-radius:999px;font-size:12px;color:var(--sub);box-shadow:var(--shadow)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+.card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px;border:.5px solid var(--line)}
+.section-title{font-size:13px;color:var(--sub);text-transform:uppercase;letter-spacing:.35px;margin:20px 4px 8px}
+.pick{
+  display:flex;min-height:154px;align-items:center;justify-content:center;text-align:center;padding:24px;
+  background:linear-gradient(180deg,var(--card),var(--card2));cursor:pointer
+}
+.pick-icon{width:54px;height:54px;margin:0 auto 10px;border-radius:17px;background:rgba(0,122,255,.12);display:grid;place-items:center;color:var(--blue);font-size:26px;font-weight:500}
+.pick strong{display:block;font-size:18px;margin-bottom:5px}.pick span{display:block;color:var(--sub);font-size:13px;line-height:1.4}
 input[type=file]{display:none}
-.preview{position:relative;aspect-ratio:1/1;background:#090b0e;border-radius:15px;overflow:hidden;touch-action:none}
+.preview{position:relative;background:#111;aspect-ratio:1/1;overflow:hidden;touch-action:none}
 .preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
-.clip{position:absolute;inset:0;width:50%;overflow:hidden}.clip img{width:100%;height:100%;object-fit:contain}
-.line{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff}.knob{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#111;font-weight:800}
-.labels{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:7px}
-.segment{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-button{width:100%;border:1px solid var(--line);background:#202630;color:var(--text);border-radius:14px;padding:14px;font-size:16px;font-weight:700}
-button:disabled{opacity:.55}
-button.active,.primary{background:var(--accent);color:#111827;border-color:transparent}.save{background:var(--ok);color:#08220d}
-.title{font-size:13px;color:var(--muted);margin:2px 0 9px}.meta,.status{font-size:13px;color:var(--muted);line-height:1.5}.status.ok{color:var(--ok)}.status.bad{color:var(--bad)}
-.hidden{display:none}.gap{margin-top:10px}.note{font-size:12px;color:#7f8794;text-align:center}
+.after-clip{position:absolute;inset:0;width:50%;overflow:hidden}
+.after-clip img{width:100%;height:100%;object-fit:contain}
+.divider{position:absolute;top:0;bottom:0;left:50%;width:2px;background:white;box-shadow:0 0 0 .5px rgba(0,0,0,.25)}
+.knob{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:white;color:#111;font-size:17px;box-shadow:0 3px 18px rgba(0,0,0,.25)}
+.preview-labels{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;pointer-events:none}
+.preview-labels span{background:rgba(0,0,0,.56);color:#fff;border-radius:999px;padding:5px 8px;font-size:11px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.row{min-height:52px;padding:0 15px;display:flex;align-items:center;justify-content:space-between;gap:14px;border-bottom:.5px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row-label{font-size:16px;min-width:0}.row-sub{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+.row-value{color:var(--sub);font-size:14px;text-align:right;white-space:nowrap}
+.segment{margin:12px;padding:4px;background:var(--card2);border-radius:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.segment.three{grid-template-columns:repeat(3,1fr)}
+.segment button{border:0;background:transparent;color:var(--text);border-radius:9px;min-height:36px;font-size:14px;font-weight:600;padding:7px 5px}
+.segment button.active{background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.12);color:var(--blue)}
+.custom{padding:0 12px 12px}
+.custom-grid{display:grid;grid-template-columns:1fr 34px 1fr;gap:8px;align-items:center}
+.num{width:100%;height:44px;border:1px solid var(--line);border-radius:12px;background:var(--card2);color:var(--text);padding:0 11px;font-size:16px;outline:none}
+.x{text-align:center;color:var(--sub)}
+.switch{position:relative;width:51px;height:31px;border-radius:999px;background:#8e8e93;flex:0 0 auto;transition:.18s}
+.switch::after{content:"";position:absolute;width:27px;height:27px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);transition:.18s}
+.switch.on{background:var(--green)}.switch.on::after{transform:translateX(20px)}
+.quality-wrap{padding:4px 15px 13px}
+input[type=range]{width:100%;accent-color:var(--blue)}
+.privacy{display:flex;align-items:center;gap:10px;color:var(--green);font-weight:600}
+.shield{width:26px;height:26px;border-radius:8px;background:rgba(52,199,89,.14);display:grid;place-items:center}
+.status{padding:12px 15px;color:var(--sub);font-size:13px;line-height:1.4;border-top:.5px solid var(--line)}
+.status.ok{color:var(--green)}.status.bad{color:var(--red)}
+.progress{height:3px;background:var(--line);overflow:hidden;display:none}
+.progress>div{height:100%;width:0;background:var(--blue);transition:width .16s ease}
+.bottom{
+  position:fixed;z-index:19;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:var(--glass);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line)
+}
+.bottom-inner{max-width:648px;margin:auto}
+.primary{width:100%;min-height:52px;border:0;border-radius:15px;background:var(--blue);color:white;font-size:17px;font-weight:700}
+.primary.save{background:var(--green);color:#fff}
+.primary:disabled{opacity:.5}
+.hidden{display:none!important}
+.spinner{display:inline-block;width:17px;height:17px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-3px;margin-right:7px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.small-action{border:0;background:none;color:var(--blue);padding:0;font-size:14px;font-weight:600}
 </style>
 </head>
 <body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">Upscaler</div>
+    <button id="resetTop" class="iconbtn hidden">เริ่มใหม่</button>
+  </div>
+</header>
+
 <main class="app">
-<h1>Image Upscaler</h1>
-<p class="sub">ออฟไลน์ • ทำงานบน iPhone • รูปไม่ถูกอัปโหลดออกจากเครื่อง</p>
+  <section class="hero">
+    <h1>ขยายรูป<br>แบบง่าย ๆ</h1>
+    <p>ทำงานบน iPhone โดยตรง ไม่ส่งรูปขึ้นเซิร์ฟเวอร์ และลบ GPS/EXIF ตอนบันทึกอัตโนมัติ</p>
+    <div class="badges">
+      <div class="badge"><span class="dot"></span><span id="offlineText">กำลังเตรียม Offline</span></div>
+      <div class="badge">🔒 On-device</div>
+    </div>
+  </section>
 
-<section class="card">
-<label class="pick" for="file"><b>เลือกรูปภาพ</b><span>แตะเพื่อเลือกจาก Photos หรือ Files</span></label>
-<input id="file" type="file" accept="image/*">
-<div id="meta" class="meta gap"></div>
-</section>
+  <div id="emptyState" class="card">
+    <label class="pick" for="file">
+      <div>
+        <div class="pick-icon">＋</div>
+        <strong>เลือกรูปภาพ</strong>
+        <span>Photos หรือ Files<br>JPG · PNG · WebP</span>
+      </div>
+    </label>
+  </div>
+  <input id="file" type="file" accept="image/jpeg,image/png,image/webp,image/*">
 
-<section id="previewCard" class="card hidden">
-<div id="preview" class="preview">
-<img id="before" alt="">
-<div id="clip" class="clip"><img id="after" alt=""></div>
-<div id="line" class="line"></div><div id="knob" class="knob">↔</div>
-</div>
-<div class="labels"><span>ก่อน</span><span>หลัง</span></div>
-</section>
+  <section id="workArea" class="hidden">
+    <div class="section-title">รูปภาพ</div>
+    <div class="card">
+      <div id="preview" class="preview">
+        <img id="before" alt="">
+        <div id="afterClip" class="after-clip hidden"><img id="after" alt=""></div>
+        <div id="divider" class="divider hidden"></div>
+        <div id="knob" class="knob hidden">↔</div>
+        <div class="preview-labels hidden" id="previewLabels"><span>ก่อน</span><span>หลัง</span></div>
+      </div>
+      <div class="row">
+        <div class="row-label">ไฟล์ต้นฉบับ<span id="sourceInfo" class="row-sub"></span></div>
+        <label class="small-action" for="file">เปลี่ยนรูป</label>
+      </div>
+      <div class="row">
+        <div class="row-label">ผลลัพธ์</div>
+        <div id="outputInfo" class="row-value">ยังไม่ได้ประมวลผล</div>
+      </div>
+    </div>
 
-<section id="controls" class="card hidden">
-<div class="title">ขยายขนาด</div>
-<div class="segment">
-<button class="scale active" data-v="2">2×</button>
-<button class="scale" data-v="3">3×</button>
-<button class="scale" data-v="4">4×</button>
-</div>
-<button id="run" class="primary gap">ขยายรูป</button>
-<div id="status" class="status gap"></div>
-</section>
+    <div class="section-title">ขนาด</div>
+    <div class="card">
+      <div class="segment" id="sizeSegment">
+        <button class="size active" data-mode="2">2×</button>
+        <button class="size" data-mode="3">3×</button>
+        <button class="size" data-mode="4">4×</button>
+        <button class="size" data-mode="custom">กำหนดเอง</button>
+      </div>
+      <div id="customBox" class="custom hidden">
+        <div class="custom-grid">
+          <input id="customW" class="num" inputmode="numeric" type="number" min="1" max="8192" placeholder="กว้าง">
+          <div class="x">×</div>
+          <input id="customH" class="num" inputmode="numeric" type="number" min="1" max="8192" placeholder="สูง">
+        </div>
+      </div>
+      <div id="ratioRow" class="row hidden">
+        <div class="row-label">ล็อกสัดส่วน<span class="row-sub">กันภาพยืดหรือเบี้ยว</span></div>
+        <button id="ratioSwitch" class="switch on" aria-label="ล็อกสัดส่วน"></button>
+      </div>
+      <div class="row">
+        <div class="row-label">ขนาดปลายทาง</div>
+        <div id="targetInfo" class="row-value">—</div>
+      </div>
+    </div>
 
-<section id="saveCard" class="card hidden">
-<button id="save" class="save">บันทึกรูป</button>
-<button id="reset" class="gap">เริ่มใหม่</button>
-</section>
+    <div class="section-title">ความคม</div>
+    <div class="card">
+      <div class="segment three" id="sharpSegment">
+        <button class="sharp active" data-sharp="off">ปิด</button>
+        <button class="sharp" data-sharp="low">เบา</button>
+        <button class="sharp" data-sharp="medium">กลาง</button>
+      </div>
+    </div>
 
-<div class="note">ไม่มี AI • ไม่มี Server</div>
+    <div class="section-title">ส่งออก</div>
+    <div class="card">
+      <div class="segment three" id="formatSegment">
+        <button class="format active" data-format="image/jpeg">JPG</button>
+        <button class="format" data-format="image/png">PNG</button>
+        <button class="format" data-format="image/webp">WebP</button>
+      </div>
+      <div id="qualityRow">
+        <div class="row">
+          <div class="row-label">คุณภาพ</div>
+          <div id="qualityValue" class="row-value">95%</div>
+        </div>
+        <div class="quality-wrap"><input id="quality" type="range" min="75" max="100" value="95"></div>
+      </div>
+      <div class="row">
+        <div class="privacy">
+          <div class="shield">✓</div>
+          <div class="row-label">Privacy Safe<span class="row-sub">ลบ GPS และ EXIF อัตโนมัติ</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="row-label">Memory Guard<span class="row-sub">ป้องกันภาพใหญ่จน Safari ค้าง</span></div>
+        <div id="memoryInfo" class="row-value">พร้อม</div>
+      </div>
+      <div id="progress" class="progress"><div id="progressBar"></div></div>
+      <div id="status" class="status">เลือกค่าที่ต้องการ แล้วกดขยายรูป</div>
+    </div>
+  </section>
 </main>
+
+<div id="bottomBar" class="bottom hidden">
+  <div class="bottom-inner">
+    <button id="mainAction" class="primary">ขยายรูป</button>
+  </div>
+</div>
+
 <script>
-const $=s=>document.querySelector(s);
-const file=$('#file'),meta=$('#meta'),previewCard=$('#previewCard'),controls=$('#controls'),saveCard=$('#saveCard');
-const before=$('#before'),after=$('#after'),preview=$('#preview'),clip=$('#clip'),line=$('#line'),knob=$('#knob');
-const run=$('#run'),save=$('#save'),reset=$('#reset'),status=$('#status');
-let image=null,srcUrl=null,outBlob=null,outUrl=null,scale=2,sourceType='image/jpeg';
+(function(){
+  const $=s=>document.querySelector(s);
+  const file=$('#file'),emptyState=$('#emptyState'),workArea=$('#workArea'),resetTop=$('#resetTop');
+  const before=$('#before'),after=$('#after'),preview=$('#preview'),afterClip=$('#afterClip'),divider=$('#divider'),knob=$('#knob'),previewLabels=$('#previewLabels');
+  const sourceInfo=$('#sourceInfo'),outputInfo=$('#outputInfo'),targetInfo=$('#targetInfo'),memoryInfo=$('#memoryInfo');
+  const customBox=$('#customBox'),ratioRow=$('#ratioRow'),customW=$('#customW'),customH=$('#customH'),ratioSwitch=$('#ratioSwitch');
+  const quality=$('#quality'),qualityValue=$('#qualityValue'),qualityRow=$('#qualityRow');
+  const status=$('#status'),progress=$('#progress'),progressBar=$('#progressBar');
+  const bottomBar=$('#bottomBar'),mainAction=$('#mainAction'),offlineText=$('#offlineText');
 
-document.querySelectorAll('.scale').forEach(b=>b.onclick=()=>{
- document.querySelectorAll('.scale').forEach(x=>x.classList.remove('active'));
- b.classList.add('active');scale=Number(b.dataset.v);showMeta();
-});
+  let image=null,sourceFile=null,srcUrl=null,outBlob=null,outUrl=null;
+  let mode='2',lockRatio=true,sharp='off',format='image/jpeg',busy=false;
+  const MAX_PIXELS=17000000,MAX_SIDE=8192;
 
-function loadImage(url){return new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=url})}
+  function fmtBytes(bytes){
+    if(!Number.isFinite(bytes))return '—';
+    if(bytes<1024*1024)return (bytes/1024).toFixed(0)+' KB';
+    return (bytes/1024/1024).toFixed(1)+' MB';
+  }
+  function loadImage(url){
+    return new Promise((resolve,reject)=>{
+      const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=url;
+    });
+  }
+  function sourceRatio(){return image?image.naturalWidth/image.naturalHeight:1}
+  function getTarget(){
+    if(!image)return {w:0,h:0};
+    if(mode!=='custom'){
+      const s=Number(mode);return {w:Math.round(image.naturalWidth*s),h:Math.round(image.naturalHeight*s)};
+    }
+    let w=Math.max(1,Math.round(Number(customW.value)||image.naturalWidth));
+    let h=Math.max(1,Math.round(Number(customH.value)||image.naturalHeight));
+    return {w,h};
+  }
+  function updateTarget(){
+    if(!image)return;
+    const t=getTarget(),pixels=t.w*t.h,estimated=pixels*4*2.2;
+    targetInfo.textContent=t.w.toLocaleString()+' × '+t.h.toLocaleString()+' px';
+    const tooBig=pixels>MAX_PIXELS||t.w>MAX_SIDE||t.h>MAX_SIDE;
+    memoryInfo.textContent=tooBig?'ใหญ่เกินไป':'ประมาณ '+fmtBytes(estimated);
+    memoryInfo.style.color=tooBig?'var(--red)':'';
+    mainAction.disabled=tooBig||busy;
+    if(tooBig){
+      status.textContent='ขนาดนี้เสี่ยงทำให้ iPhone ค้าง ลดขนาดลงก่อน';
+      status.className='status bad';
+    }else if(!outBlob && !busy){
+      status.textContent='เลือกค่าที่ต้องการ แล้วกดขยายรูป';
+      status.className='status';
+    }
+  }
+  function setSplit(p){
+    p=Math.max(0,Math.min(100,p));
+    afterClip.style.width=p+'%';divider.style.left=p+'%';knob.style.left=p+'%';
+  }
+  let dragging=false;
+  preview.addEventListener('pointerdown',e=>{
+    if(!outBlob)return;
+    dragging=true;preview.setPointerCapture(e.pointerId);moveSplit(e);
+  });
+  preview.addEventListener('pointermove',e=>{if(dragging)moveSplit(e)});
+  preview.addEventListener('pointerup',()=>dragging=false);
+  preview.addEventListener('pointercancel',()=>dragging=false);
+  function moveSplit(e){const r=preview.getBoundingClientRect();setSplit((e.clientX-r.left)/r.width*100)}
 
-file.onchange=async()=>{
- const f=file.files&&file.files[0];if(!f)return;
- cleanupOutput();
- if(srcUrl)URL.revokeObjectURL(srcUrl);
- srcUrl=URL.createObjectURL(f);sourceType=f.type||'image/jpeg';
- try{
-   image=await loadImage(srcUrl);
-   before.src=srcUrl;after.src=srcUrl;
-   previewCard.classList.remove('hidden');controls.classList.remove('hidden');saveCard.classList.add('hidden');
-   status.textContent='';status.className='status gap';setSplit(50);showMeta();
- }catch(e){status.textContent='เปิดรูปไม่สำเร็จ ลองเลือกรูป JPG หรือ PNG';status.className='status gap bad'}
-};
+  function setProgress(v){
+    progress.style.display=v>0&&v<100?'block':'none';
+    progressBar.style.width=Math.max(0,Math.min(100,v))+'%';
+  }
+  function cleanupOutput(){
+    if(outUrl)URL.revokeObjectURL(outUrl);
+    outUrl=null;outBlob=null;
+    after.removeAttribute('src');
+    afterClip.classList.add('hidden');divider.classList.add('hidden');knob.classList.add('hidden');previewLabels.classList.add('hidden');
+    outputInfo.textContent='ยังไม่ได้ประมวลผล';
+    mainAction.textContent='ขยายรูป';mainAction.classList.remove('save');
+  }
+  function invalidate(){
+    if(outBlob)cleanupOutput();
+    updateTarget();
+  }
+  async function selectFile(f){
+    if(!f)return;
+    cleanupOutput();
+    if(srcUrl)URL.revokeObjectURL(srcUrl);
+    srcUrl=URL.createObjectURL(f);sourceFile=f;
+    try{
+      image=await loadImage(srcUrl);
+      before.src=srcUrl;
+      sourceInfo.textContent=image.naturalWidth.toLocaleString()+' × '+image.naturalHeight.toLocaleString()+' px · '+fmtBytes(f.size);
+      emptyState.classList.add('hidden');workArea.classList.remove('hidden');bottomBar.classList.remove('hidden');resetTop.classList.remove('hidden');
+      customW.value=image.naturalWidth;customH.value=image.naturalHeight;
+      updateTarget();
+      status.textContent='เลือกค่าที่ต้องการ แล้วกดขยายรูป';status.className='status';
+    }catch(e){
+      status.textContent='เปิดรูปนี้ไม่สำเร็จ ลองใช้ JPG, PNG หรือ WebP';status.className='status bad';
+    }
+  }
+  file.addEventListener('change',()=>selectFile(file.files&&file.files[0]));
 
-function showMeta(){
- if(!image)return;
- const w=image.naturalWidth,h=image.naturalHeight,ow=w*scale,oh=h*scale;
- meta.textContent=w.toLocaleString()+' × '+h.toLocaleString()+'  →  '+ow.toLocaleString()+' × '+oh.toLocaleString()+' px';
-}
-function setSplit(p){p=Math.max(0,Math.min(100,p));clip.style.width=p+'%';line.style.left=p+'%';knob.style.left=p+'%'}
-let drag=false;
-preview.onpointerdown=e=>{drag=true;preview.setPointerCapture(e.pointerId);move(e)};
-preview.onpointermove=e=>{if(drag)move(e)};preview.onpointerup=()=>drag=false;preview.onpointercancel=()=>drag=false;
-function move(e){const r=preview.getBoundingClientRect();setSplit((e.clientX-r.left)/r.width*100)}
+  document.querySelectorAll('.size').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.size').forEach(x=>x.classList.remove('active'));btn.classList.add('active');
+    mode=btn.dataset.mode;
+    const custom=mode==='custom';
+    customBox.classList.toggle('hidden',!custom);ratioRow.classList.toggle('hidden',!custom);
+    if(custom&&image){customW.value=image.naturalWidth;customH.value=image.naturalHeight}
+    invalidate();
+  }));
+  ratioSwitch.addEventListener('click',()=>{
+    lockRatio=!lockRatio;ratioSwitch.classList.toggle('on',lockRatio);
+    if(lockRatio&&image){customH.value=Math.round((Number(customW.value)||image.naturalWidth)/sourceRatio())}
+    invalidate();
+  });
+  let syncing=false;
+  customW.addEventListener('input',()=>{
+    if(syncing)return;
+    if(lockRatio&&image){syncing=true;customH.value=Math.max(1,Math.round((Number(customW.value)||1)/sourceRatio()));syncing=false}
+    invalidate();
+  });
+  customH.addEventListener('input',()=>{
+    if(syncing)return;
+    if(lockRatio&&image){syncing=true;customW.value=Math.max(1,Math.round((Number(customH.value)||1)*sourceRatio()));syncing=false}
+    invalidate();
+  });
+  document.querySelectorAll('.sharp').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.sharp').forEach(x=>x.classList.remove('active'));btn.classList.add('active');sharp=btn.dataset.sharp;invalidate();
+  }));
+  document.querySelectorAll('.format').forEach(btn=>btn.addEventListener('click',()=>{
+    document.querySelectorAll('.format').forEach(x=>x.classList.remove('active'));btn.classList.add('active');format=btn.dataset.format;
+    qualityRow.classList.toggle('hidden',format==='image/png');invalidate();
+  }));
+  quality.addEventListener('input',()=>{qualityValue.textContent=quality.value+'%';invalidate()});
 
-run.onclick=async()=>{
- if(!image)return;
- run.disabled=true;saveCard.classList.add('hidden');status.textContent='กำลังขยายรูป…';status.className='status gap';
- await new Promise(r=>setTimeout(r,30));
- try{
-   const w=image.naturalWidth*scale,h=image.naturalHeight*scale,pixels=w*h;
-   if(pixels>24000000)throw new Error('รูปปลายทางใหญ่เกินไปสำหรับการทำงานที่เสถียรบน iPhone ลองลดระดับการขยาย');
-   const c=document.createElement('canvas');c.width=w;c.height=h;
-   const ctx=c.getContext('2d',{alpha:true});
-   if(!ctx)throw new Error('อุปกรณ์นี้สร้าง Canvas ไม่สำเร็จ');
-   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-   ctx.drawImage(image,0,0,w,h);
-   const png=sourceType==='image/png';
-   const type=png?'image/png':'image/jpeg';
-   outBlob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('สร้างไฟล์ไม่สำเร็จ')),type,png?undefined:0.95));
-   if(outUrl)URL.revokeObjectURL(outUrl);
-   outUrl=URL.createObjectURL(outBlob);after.src=outUrl;
-   status.textContent='เสร็จแล้ว • '+w.toLocaleString()+' × '+h.toLocaleString()+' px • '+(outBlob.size/1024/1024).toFixed(1)+' MB';
-   status.className='status gap ok';saveCard.classList.remove('hidden');setSplit(50);
- }catch(e){status.textContent=e.message||'เกิดข้อผิดพลาด';status.className='status gap bad'}
- finally{run.disabled=false}
-};
+  async function applySharpen(ctx,w,h,level){
+    if(level==='off')return;
+    const strength=level==='low'?.11:.19,strip=160;
+    for(let y=0;y<h;y+=strip){
+      const start=Math.max(0,y-1),end=Math.min(h,y+strip+1),hh=end-start;
+      const img=ctx.getImageData(0,start,w,hh),src=new Uint8ClampedArray(img.data);
+      const first=Math.max(1,y-start),last=Math.min(hh-1,(y-start)+Math.min(strip,h-y));
+      for(let yy=first;yy<last;yy++){
+        for(let x=1;x<w-1;x++){
+          const i=(yy*w+x)*4;
+          for(let c=0;c<3;c++){
+            const v=src[i+c]*(1+4*strength)-strength*(src[i-4+c]+src[i+4+c]+src[i-w*4+c]+src[i+w*4+c]);
+            img.data[i+c]=v<0?0:v>255?255:v;
+          }
+        }
+      }
+      ctx.putImageData(img,0,start,0,first,w,last-first);
+      if(y%(strip*4)===0){
+        setProgress(48+Math.round((y/h)*30));
+        await new Promise(r=>setTimeout(r,0));
+      }
+    }
+  }
+  function canvasBlob(canvas,type,q){
+    return new Promise((resolve,reject)=>{
+      canvas.toBlob(b=>b?resolve(b):reject(new Error('สร้างไฟล์ไม่สำเร็จ')),type,type==='image/png'?undefined:q);
+    });
+  }
+  async function process(){
+    if(!image||busy)return;
+    const t=getTarget(),pixels=t.w*t.h;
+    if(pixels>MAX_PIXELS||t.w>MAX_SIDE||t.h>MAX_SIDE){
+      status.textContent='ขนาดนี้ใหญ่เกินไปสำหรับการทำงานที่เสถียรบน iPhone';status.className='status bad';return;
+    }
+    busy=true;mainAction.disabled=true;mainAction.innerHTML='<span class="spinner"></span>กำลังขยาย';status.textContent='กำลังประมวลผลในเครื่อง…';status.className='status';setProgress(12);
+    try{
+      await new Promise(r=>requestAnimationFrame(r));
+      const canvas=document.createElement('canvas');canvas.width=t.w;canvas.height=t.h;
+      const ctx=canvas.getContext('2d',{alpha:format==='image/png',willReadFrequently:sharp!=='off'});
+      if(!ctx)throw new Error('สร้างพื้นที่ประมวลผลไม่สำเร็จ');
+      if(format!=='image/png'){ctx.fillStyle='#fff';ctx.fillRect(0,0,t.w,t.h)}
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+      ctx.drawImage(image,0,0,t.w,t.h);
+      setProgress(45);
+      await new Promise(r=>setTimeout(r,0));
+      await applySharpen(ctx,t.w,t.h,sharp);
+      setProgress(82);
+      let blob=await canvasBlob(canvas,format,Number(quality.value)/100);
+      if(format==='image/webp'&&blob.type!=='image/webp'){
+        blob=await canvasBlob(canvas,'image/jpeg',Number(quality.value)/100);
+        format='image/jpeg';
+      }
+      outBlob=blob;
+      if(outUrl)URL.revokeObjectURL(outUrl);outUrl=URL.createObjectURL(blob);
+      after.src=outUrl;afterClip.classList.remove('hidden');divider.classList.remove('hidden');knob.classList.remove('hidden');previewLabels.classList.remove('hidden');setSplit(50);
+      outputInfo.textContent=t.w.toLocaleString()+' × '+t.h.toLocaleString()+' · '+fmtBytes(blob.size);
+      status.textContent='เสร็จแล้ว · GPS/EXIF ถูกลบออกจากไฟล์ใหม่';status.className='status ok';
+      mainAction.textContent='บันทึกรูป';mainAction.classList.add('save');setProgress(100);
+    }catch(e){
+      cleanupOutput();status.textContent=e&&e.message?e.message:'เกิดข้อผิดพลาดระหว่างประมวลผล';status.className='status bad';
+    }finally{
+      busy=false;mainAction.disabled=false;
+    }
+  }
+  async function saveResult(){
+    if(!outBlob)return;
+    const ext=outBlob.type==='image/png'?'png':outBlob.type==='image/webp'?'webp':'jpg';
+    const outFile=new File([outBlob],'upscaled.'+ext,{type:outBlob.type});
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[outFile]})){
+        await navigator.share({files:[outFile],title:'Upscaled Image'});return;
+      }
+    }catch(e){if(e&&e.name==='AbortError')return}
+    const a=document.createElement('a');a.href=outUrl;a.download=outFile.name;document.body.appendChild(a);a.click();a.remove();
+  }
+  mainAction.addEventListener('click',()=>outBlob?saveResult():process());
 
-save.onclick=async()=>{
- if(!outBlob)return;
- const ext=outBlob.type==='image/png'?'png':'jpg';
- const f=new File([outBlob],'upscaled-'+scale+'x.'+ext,{type:outBlob.type});
- try{
-   if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'Upscaled Image'});return}
- }catch(e){if(e.name==='AbortError')return}
- const a=document.createElement('a');a.href=outUrl;a.download=f.name;document.body.appendChild(a);a.click();a.remove();
-};
+  function resetAll(){
+    cleanupOutput();
+    if(srcUrl)URL.revokeObjectURL(srcUrl);
+    srcUrl=null;image=null;sourceFile=null;file.value='';
+    workArea.classList.add('hidden');emptyState.classList.remove('hidden');bottomBar.classList.add('hidden');resetTop.classList.add('hidden');
+    mode='2';sharp='off';format='image/jpeg';lockRatio=true;
+    document.querySelectorAll('.size').forEach(x=>x.classList.toggle('active',x.dataset.mode==='2'));
+    document.querySelectorAll('.sharp').forEach(x=>x.classList.toggle('active',x.dataset.sharp==='off'));
+    document.querySelectorAll('.format').forEach(x=>x.classList.toggle('active',x.dataset.format==='image/jpeg'));
+    customBox.classList.add('hidden');ratioRow.classList.add('hidden');ratioSwitch.classList.add('on');qualityRow.classList.remove('hidden');
+    quality.value=95;qualityValue.textContent='95%';
+  }
+  resetTop.addEventListener('click',resetAll);
 
-reset.onclick=()=>{
- cleanupOutput();if(srcUrl)URL.revokeObjectURL(srcUrl);srcUrl=null;image=null;file.value='';meta.textContent='';
- previewCard.classList.add('hidden');controls.classList.add('hidden');saveCard.classList.add('hidden');status.textContent='';
-};
-function cleanupOutput(){if(outUrl)URL.revokeObjectURL(outUrl);outUrl=null;outBlob=null}
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  function updateOfflineBadge(){
+    const controlled=!!navigator.serviceWorker&&!!navigator.serviceWorker.controller;
+    offlineText.textContent=controlled?'Offline พร้อมใช้':'ออนไลน์ครั้งแรกเพื่อเตรียม Offline';
+  }
+  window.addEventListener('online',updateOfflineBadge);window.addEventListener('offline',updateOfflineBadge);
+  if('serviceWorker'in navigator){
+    window.addEventListener('load',async()=>{
+      try{await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready}catch(e){}
+      updateOfflineBadge();
+    });
+    navigator.serviceWorker.addEventListener('controllerchange',updateOfflineBadge);
+  }else updateOfflineBadge();
+})();
 </script>
 </body>
 </html>
